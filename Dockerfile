@@ -264,6 +264,8 @@ USER node
 # --bind lan: listen on 0.0.0.0 so proxy/ingress can reach the gateway (required for Coolify/Docker).
 # Ensure openclaw.json exists with allowedOrigins (required when --bind lan).
 # If /data is empty (no Persistent Storage), copy default config so gateway can start.
-HEALTHCHECK --interval=3m --timeout=10s --start-period=15s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+# Use curl (Coolify recommends it); gateway may need 45s to cold-start.
+# Port matches OPENCLAW_GATEWAY_PORT (Coolify may set 3000) or config default 18789.
+HEALTHCHECK --interval=1m --timeout=10s --start-period=45s --retries=3 \
+  CMD sh -c 'curl -sf "http://127.0.0.1:${OPENCLAW_GATEWAY_PORT:-18789}/healthz"'
 CMD ["sh", "-c", "test -f /data/openclaw.json || cp /app/openclaw.json.default /data/openclaw.json; exec node openclaw.mjs gateway --allow-unconfigured --bind lan"]
