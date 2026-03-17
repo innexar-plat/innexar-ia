@@ -155,6 +155,10 @@ COPY --from=runtime-assets --chown=node:node /app/extensions ./extensions
 COPY --from=runtime-assets --chown=node:node /app/skills ./skills
 COPY --from=runtime-assets --chown=node:node /app/docs ./docs
 
+# Default config for Coolify: bind=lan requires gateway.controlUi.allowedOrigins.
+# If /data/openclaw.json is missing (no Persistent Storage mount), use this.
+COPY --from=runtime-assets --chown=node:node /app/openclaw.json.example /app/openclaw.json.default
+
 # Verify workspace templates exist (required for heartbeat, bootstrap).
 RUN test -f docs/reference/templates/IDENTITY.md || \
     (echo "ERROR: docs/reference/templates/IDENTITY.md missing in runtime image." && exit 1)
@@ -258,6 +262,8 @@ USER node
 #   - aliases: /health and /ready
 # For external access from host/ingress, override bind to "lan" and set auth.
 # --bind lan: listen on 0.0.0.0 so proxy/ingress can reach the gateway (required for Coolify/Docker).
+# Ensure openclaw.json exists with allowedOrigins (required when --bind lan).
+# If /data is empty (no Persistent Storage), copy default config so gateway can start.
 HEALTHCHECK --interval=3m --timeout=10s --start-period=15s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]
+CMD ["sh", "-c", "test -f /data/openclaw.json || cp /app/openclaw.json.default /data/openclaw.json; exec node openclaw.mjs gateway --allow-unconfigured --bind lan"]
