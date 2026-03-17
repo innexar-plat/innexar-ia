@@ -70,6 +70,11 @@ RUN --mount=type=cache,id=openclaw-pnpm-store,target=/root/.local/share/pnpm/sto
 
 COPY . .
 
+# Ensure workspace templates (IDENTITY.md, AGENTS.md, etc.) are packaged.
+# Required for heartbeat and workspace bootstrap. Fail early if missing.
+RUN test -f docs/reference/templates/IDENTITY.md || \
+    (echo "ERROR: docs/reference/templates/IDENTITY.md missing. Ensure docs/reference/templates are in the build context." && exit 1)
+
 # Normalize extension paths now so runtime COPY preserves safe modes
 # without adding a second full extensions layer.
 RUN for dir in /app/extensions /app/.agent /app/.agents; do \
