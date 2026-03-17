@@ -606,13 +606,24 @@ export function renderNode(params: {
     return renderTextInput({ ...params, inputType: "text" });
   }
 
-  // Fallback
-  return html`
-    <div class="cfg-field cfg-field--error">
-      <div class="cfg-field__label">${label}</div>
-      <div class="cfg-field__error">Unsupported type: ${type}. Use Raw mode.</div>
-    </div>
-  `;
+  // Implicit object: schema has properties but no type (common in channel configs)
+  if ((!type || type === "null") && schema.properties && Object.keys(schema.properties).length > 0) {
+    return renderObject(params);
+  }
+
+  // Fallback — tipos não suportados: usar editor Raw (JSON)
+  return renderJsonTextarea({
+    schema,
+    value,
+    path,
+    hints,
+    disabled,
+    showLabel,
+    revealSensitive: params.revealSensitive ?? false,
+    isSensitivePathRevealed: params.isSensitivePathRevealed,
+    onToggleSensitivePath: params.onToggleSensitivePath,
+    onPatch,
+  });
 }
 
 function renderTextInput(params: {
