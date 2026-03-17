@@ -51,12 +51,21 @@ export function handleConnected(host: LifecycleHost) {
   syncThemeWithSettings(host as unknown as Parameters<typeof syncThemeWithSettings>[0]);
   attachThemeListener(host as unknown as Parameters<typeof attachThemeListener>[0]);
   window.addEventListener("popstate", host.popStateHandler);
-  void bootstrapReady.finally(() => {
-    if (host.connectGeneration !== connectGeneration) {
-      return;
-    }
-    connectGateway(host as unknown as Parameters<typeof connectGateway>[0]);
-  });
+  // Auto-connect immediately; do not wait for bootstrap (avoids delay when embedded in iframe/proxy).
+  const gatewayHost = host as unknown as Parameters<typeof connectGateway>[0];
+  const hasPendingGatewayUrl =
+    "pendingGatewayUrl" in gatewayHost && Boolean((gatewayHost as { pendingGatewayUrl?: string | null }).pendingGatewayUrl);
+  if (!hasPendingGatewayUrl) {
+    connectGateway(gatewayHost);
+  } else {
+    void bootstrapReady.finally(() => {
+      if (host.connectGeneration !== connectGeneration) {
+        return;
+      }
+      connectGateway(gatewayHost);
+    });
+  }
+  void bootstrapReady;
   startNodesPolling(host as unknown as Parameters<typeof startNodesPolling>[0]);
   if (host.tab === "logs") {
     startLogsPolling(host as unknown as Parameters<typeof startLogsPolling>[0]);
