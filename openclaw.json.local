@@ -1,0 +1,19 @@
+{
+  "gateway": {
+    "bind": "lan",
+    "port": 18789,
+    "controlUi": {
+      "basePath": "/api/workspace/openclaw-ui",
+      "allowedOrigins": [
+        "http://localhost:3000",
+        "http://localhost:3010",
+        "http://localhost:8000",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3010",
+        "http://127.0.0.1:8000",
+        "https://app.innexar.com.br",
+        "https://api.innexar.com.br"
+      ]
+    }
+  }
+}
