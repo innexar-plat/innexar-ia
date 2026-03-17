@@ -143,6 +143,10 @@ RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,shar
 
 RUN chown node:node /app
 
+# Create /data for OPENCLAW_STATE_DIR (canvas, cron, sessions).
+# Coolify/docker-compose may mount a volume here; ensure dir exists and is writable by node.
+RUN install -d -m 0755 /data && chown node:node /data
+
 COPY --from=runtime-assets --chown=node:node /app/dist ./dist
 COPY --from=runtime-assets --chown=node:node /app/node_modules ./node_modules
 COPY --from=runtime-assets --chown=node:node /app/package.json .
@@ -150,6 +154,10 @@ COPY --from=runtime-assets --chown=node:node /app/openclaw.mjs .
 COPY --from=runtime-assets --chown=node:node /app/extensions ./extensions
 COPY --from=runtime-assets --chown=node:node /app/skills ./skills
 COPY --from=runtime-assets --chown=node:node /app/docs ./docs
+
+# Verify workspace templates exist (required for heartbeat, bootstrap).
+RUN test -f docs/reference/templates/IDENTITY.md || \
+    (echo "ERROR: docs/reference/templates/IDENTITY.md missing in runtime image." && exit 1)
 
 # Keep pnpm available in the runtime image for container-local workflows.
 # Use a shared Corepack home so the non-root `node` user does not need a
