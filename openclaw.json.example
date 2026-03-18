@@ -5,6 +5,7 @@
     "controlUi": {
       "basePath": "/api/workspace/openclaw-ui",
       "allowedOrigins": [
+        "https://ia.innexar.com.br",
         "https://app.innexar.com.br",
         "https://api.innexar.com.br"
       ],
